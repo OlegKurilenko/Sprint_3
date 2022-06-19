@@ -20,7 +20,7 @@ public class CreateOrderTest {
         this.expectedStatusCode = expectedStatusCode;
     }
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "Тестовые данные: {0} {1}")
     public static Object[] getTestData() {
         return new Object[][]{
                 {Order.getOrderWithColor(new String[]{"GREY", "BLACK"}), 201},

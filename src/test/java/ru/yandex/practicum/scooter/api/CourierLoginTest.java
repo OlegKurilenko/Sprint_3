@@ -2,6 +2,7 @@ package ru.yandex.practicum.scooter.api;
 
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +13,7 @@ import static org.apache.http.HttpStatus.*;
 import static ru.yandex.practicum.scooter.api.model.Courier.getRandomCourier;
 
 public class CourierLoginTest {
-    int courierId;
+    Integer courierId;
     Courier courier;
 
     CourierClient courierClient = new CourierClient();
@@ -20,6 +21,13 @@ public class CourierLoginTest {
     @Before
     public void setup() {
         courier = getRandomCourier();
+    }
+
+    @After
+    public void delete() {
+        if (courierId != null) {
+            courierClient.deleteCourier(courierId);
+        }
     }
 
     @Test
@@ -32,11 +40,8 @@ public class CourierLoginTest {
         //Авторизация курьера
         CourierCredentials courierCredentials = new CourierCredentials(courier.getLogin(), courier.getPassword());
         Response responseLogin = courierClient.loginCourier(courierCredentials);
-        Assert.assertEquals(SC_OK, responseLogin.statusCode());
         courierId = responseLogin.body().jsonPath().getInt("id");
-
-        //Удаляем курьера
-        courierClient.deleteCourier(courierId);
+        Assert.assertEquals(SC_OK, responseLogin.statusCode());
     }
 
     @Test
@@ -46,17 +51,17 @@ public class CourierLoginTest {
         //Создаем курьера
         Response responseCreate = courierClient.createCourier(courier);
 
+        //Получаем Id курьера для последующего удаления
+        CourierCredentials courierCredentialsOk = new CourierCredentials(courier.getLogin(), courier.getPassword());
+        Response responseLoginOk = courierClient.loginCourier(courierCredentialsOk);
+        courierId = responseLoginOk.body().jsonPath().getInt("id");
+
         //Авторизация курьера
         CourierCredentials courierCredentialsBad = new CourierCredentials(courier.getLogin(), null);
         Response responseLoginBad = courierClient.loginCourier(courierCredentialsBad);
         Assert.assertEquals(SC_BAD_REQUEST, responseLoginBad.statusCode());
         Assert.assertEquals("Недостаточно данных для входа", responseLoginBad.body().jsonPath().getString("message"));
 
-        //Удаляем курьера
-        CourierCredentials courierCredentialsOk = new CourierCredentials(courier.getLogin(), courier.getPassword());
-        Response responseLoginOk = courierClient.loginCourier(courierCredentialsOk);
-        courierId = responseLoginOk.body().jsonPath().getInt("id");
-        courierClient.deleteCourier(courierId);
     }
 
     @Test
@@ -66,17 +71,17 @@ public class CourierLoginTest {
         //Создаем курьера
         Response responseCreate = courierClient.createCourier(courier);
 
+        //Получаем Id курьера для последующего удаления
+        CourierCredentials courierCredentialsOk = new CourierCredentials(courier.getLogin(), courier.getPassword());
+        Response responseLoginOk = courierClient.loginCourier(courierCredentialsOk);
+        courierId = responseLoginOk.body().jsonPath().getInt("id");
+
         //Авторизация курьера
         CourierCredentials courierCredentialsBad = new CourierCredentials(null, courier.getPassword());
         Response responseLoginBad = courierClient.loginCourier(courierCredentialsBad);
         Assert.assertEquals(SC_BAD_REQUEST, responseLoginBad.statusCode());
         Assert.assertEquals("Недостаточно данных для входа", responseLoginBad.body().jsonPath().getString("message"));
 
-        //Удаляем курьера
-        CourierCredentials courierCredentialsOk = new CourierCredentials(courier.getLogin(), courier.getPassword());
-        Response responseLoginOk = courierClient.loginCourier(courierCredentialsOk);
-        courierId = responseLoginOk.body().jsonPath().getInt("id");
-        courierClient.deleteCourier(courierId);
     }
 
     @Test
